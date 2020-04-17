@@ -14,7 +14,7 @@ Install package::
 ```
 git clone https://github.com/instahyre/django-tastypie-swagger
 
-pip install tastypie_swagger
+pip install -e django-tastypie-swagger
 ```
 
 Add to INSTALLED_APPS::
