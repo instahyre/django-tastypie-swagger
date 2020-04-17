@@ -12,7 +12,7 @@ This package provides two things:
 Install package::
 
 ```
-git clone git@bitbucket.org:blobinfotech/tastypie_swagger.git
+git clone https://github.com/instahyre/django-tastypie-swagger
 
 pip install tastypie_swagger
 ```
