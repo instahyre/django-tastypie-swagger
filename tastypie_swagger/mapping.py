@@ -123,7 +123,6 @@ class ResourceSwaggerMapping(object):
             'description': description,
         }
 
-
         # TODO make use of this to Implement the allowable_values of swagger
         # (https://github.com/wordnik/swagger-core/wiki/Datatypes) at the field level.
         # This could be added to the meta value of the resource to specify enum-like or range data on a field.
@@ -139,7 +138,7 @@ class ResourceSwaggerMapping(object):
                 parameters.append(self.build_parameter(
                     name=name,
                     dataType=field['type'],
-                    required=field['nullable'],
+                    required=not field['blank'],
                     description=force_text(field['help_text']),
                 ))
         return parameters
@@ -201,7 +200,7 @@ class ResourceSwaggerMapping(object):
                         if field == ALL:
                             has_related_resource = False
                         else:
-                            has_related_resource = hasattr(self.resource.fields[name], 'get_related_resource')
+                            has_related_resource = hasattr(self.resource.fields.get(name), 'get_related_resource')
 
                         if not has_related_resource:
                             #This code has been mostly sucked from the tastypie lib
@@ -350,7 +349,7 @@ class ResourceSwaggerMapping(object):
                 # is not set.
                 fields=extra_action.get('fields', {}),
                 resource_type=extra_action.get("resource_type", "view")),
-            'responseClass': extra_action.get("responseClass", "Object"),
+            'responseClass': 'Object', #TODO this should be extended to allow the creation of a custom object.
             'nickname': extra_action['name'],
             'notes': extra_action.get('notes', ''),
         }
@@ -413,14 +412,14 @@ class ResourceSwaggerMapping(object):
         apis.extend(self.build_extra_apis())
         return apis
 
-    def build_property(self, name, type, description="", required=False):
+    def build_property(self, name, type, description=""):
         prop = {
             name: {
                 'type': type,
                 'description': description,
-                'required':required
             }
         }
+
         if type == 'List':
             prop[name]['items'] = {'$ref': name}
 
@@ -450,7 +449,6 @@ class ResourceSwaggerMapping(object):
                     # note: 'help_text' is a Django proxy which must be wrapped
                     # in unicode *specifically* to get the actual help text.
                     force_text(field.get('help_text', '')),
-                    field.get('nullable')
                 )
             )
         return properties
@@ -529,6 +527,7 @@ class ResourceSwaggerMapping(object):
         return models
 
     def build_models(self):
+        #TODO this should be extended to allow the creation of a custom objects for extra_actions.
         models = {}
 
         # Take care of the list particular schema with meta and so on.
@@ -561,16 +560,4 @@ class ResourceSwaggerMapping(object):
                 id=self.resource_name
             )
         )
-
-        if hasattr(self.resource._meta, 'extra_actions'):
-            for extra_action in self.resource._meta.extra_actions:
-                if "model" in extra_action:
-                    models.update(
-                        self.build_model(
-                        resource_name=extra_action['model']['id'],
-                        properties=extra_action['model']['properties'],
-                        id=extra_action['model']['id']
-                        )
-                    )
-
         return models
